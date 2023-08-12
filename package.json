@@ -1,6 +1,9 @@
 {
   "name": "gitlexjs",
   "version": "0.1.0",
+  "bin": {
+    "gitlex": "./dist/index.js"
+  },
   "description": "An AI-powered tool designed to generate and enhance Git commit messages, simplifying the developer's workflow and ensuring meaningful version histories.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
