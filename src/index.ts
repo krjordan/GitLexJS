@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { getApiKeyFromConfig, saveApiKeyToConfig } from "./config/config-handler"
 import { getGitChanges, truncateDiff } from "./git/git-handler"
 import { generateCommitMessage } from "./openai/openai-handler"
