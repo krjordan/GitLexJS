@@ -1,4 +1,3 @@
-
 # GitLexJS 🚀✨
 
 Generate intelligent commit messages for your Git changes using AI. GitLexJS leverages OpenAI's GPT models to craft meaningful commit messages based on your code diffs.
