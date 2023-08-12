@@ -21,7 +21,7 @@ async function findOidInTree(fs: any, dir: string, treeOid: string, filepath: st
       // If it's not an instance of Error, we log it as-is (might be beneficial in rare cases)
       console.error(`Error in findOidInTree for directory ${dir} and filepath ${filepath}:`, error);
     }
-    // Decide how to handle the error. Here, we'll throw it so the calling function knows there was an error.
+    // Here, we'll throw it so the calling function knows there was an error.
     throw error;
   }
 

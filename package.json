@@ -1,24 +1,41 @@
 {
   "name": "gitlexjs",
   "version": "0.1.0",
-  "description": "",
-  "main": "./dist/main.js",
-  "types": "./dist/main.d.ts",
+  "description": "An AI-powered tool designed to generate and enhance Git commit messages, simplifying the developer's workflow and ensuring meaningful version histories.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "git",
+    "commit",
+    "messages",
+    "AI",
+    "OpenAI",
+    "GPT",
+    "automation",
+    "developer-tools",
+    "code-diff",
+    "git-helpers",
+    "versioning",
+    "commit-history",
+    "GitLex",
+    "natural-language-processing",
+    "NLP",
+    "machine-learning"
+  ],
   "author": "Ryan Jordan",
-  "license": "ISC",
+  "license": "MIT",
+  "dependencies": {
+    "diff": "^5.1.0",
+    "isomorphic-git": "^1.24.5",
+    "openai": "^3.3.0"
+  },
   "devDependencies": {
-    "@types/axios": "^0.14.0",
     "@types/diff": "^5.0.3",
     "@types/node": "^20.4.9",
     "typescript": "^5.1.6"
-  },
-  "dependencies": {
-    "axios": "^1.4.0",
-    "diff": "^5.1.0",
-    "isomorphic-git": "^1.24.5"
   }
 }

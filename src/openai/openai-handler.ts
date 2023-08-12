@@ -1,33 +1,37 @@
-import axios, { AxiosError } from 'axios';
+import { Configuration, OpenAIApi } from 'openai'
 
 export async function generateCommitMessage(diff: string, apiKey: string): Promise<string> {
+  const configuration = new Configuration({ apiKey });
+  const openai = new OpenAIApi(configuration);
+
   try {
-    const response = await axios.post('https://api.openai.com/v1/engines/text-davinci-003/completions', {
-      prompt: `Suggest a commit message for the following changes:\n${diff}`,
-      max_tokens: 50
-    }, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`
-      }
+    const completion = await openai.createChatCompletion({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          "role": "system",
+          "content": "You are an assistant that suggests descriptive git commit messages based on provided code changes or descriptions. Your suggestions should be concise, relevant, and clearly convey the intent of the changes."
+        },
+        {
+          "role": "user",
+          "content": "Suggest a commit message for the following changes:\n" + diff
+        }
+      ],
+      max_tokens: 50,
     });
 
-    if (response.data && response.data.choices && response.data.choices[0] && response.data.choices[0].text) {
-      return response.data.choices[0].text.trim();
+    // Check if there's a valid message in the response.
+    if (completion.data.choices && completion.data.choices[0] && completion.data.choices[0].message?.content) {
+      return completion.data.choices[0].message.content;
     } else {
-      throw new Error("Unexpected response structure from OpenAI API.");
+      throw new Error("OpenAI response does not contain a valid commit message.");
     }
-
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response && axiosError.response.data === 'object' && axiosError.response.data !== null) {
-        const errorMessage = (axiosError.response.data as any).error || axiosError.message;
-        throw new Error(`OpenAI API Error: ${errorMessage}`);
-      }
-    }
     if (error instanceof Error) {
-      throw new Error(`OpenAI API Error: ${error.message}`);
+      console.error("Error generating commit message:", error.message);
+    } else {
+      console.error("An unknown error occurred while generating the commit message.");
     }
-    throw new Error(`OpenAI API Error: ${error}`);
+    return ''; // Return an empty string as fallback.
   }
 }
