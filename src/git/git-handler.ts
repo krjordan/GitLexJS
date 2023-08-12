@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as nativeFs from 'fs/promises'
 import { diffLines } from 'diff'
 
-async function findOidInTree(
+export async function findOidInTree(
   fs: any,
   dir: string,
   treeOid: string,

@@ -3,7 +3,9 @@
     "target": "ES6",
     "module": "CommonJS",
     "outDir": "./dist",
-    "strict": true
+    "strict": true,
+    "types": ["jest"],
+    "esModuleInterop": true
   },
   "main": "./dist/index.js",
   "include": ["src/**/*.ts"],

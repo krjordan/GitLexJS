@@ -11,6 +11,7 @@
     "sourceType": "module",
     "project": "./tsconfig.json"
   },
+  "ignorePatterns": ["node_modules/", "dist/", "coverage/", "jest.config.js"],
   "rules": {
     "@typescript-eslint/strict-boolean-expressions": "off",
     "@typescript-eslint/space-before-function-paren": [

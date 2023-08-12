@@ -10,7 +10,7 @@ import * as readline from 'readline'
 
 const CONFIG_FILE = '.gitlex_config.json'
 
-function checkApiKey(): void {
+export function checkApiKey(): void {
   try {
     if (getApiKeyFromConfig()) {
       console.log(`An OpenAI API key is stored in the ${CONFIG_FILE} file.`)
