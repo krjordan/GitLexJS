@@ -52,7 +52,7 @@ gitlexjs --check-api-key
 For `GitLexJS` to work, you'll need an OpenAI API key:
 
 1. [Sign up](https://beta.openai.com/signup/) for an API key with OpenAI.
-2. The first time you run `GitLexJS`, it will prompt you to enter the key. It's then stored locally and securely in `.gitlex-config.json`.
+2. The first time you run `GitLexJS`, it will prompt you to enter the key. It's then stored locally and securely in `.gitlex_config.json`.
 
 > ⚠️ **Note:** Never share your API key or commit it directly to your codebase.
 
