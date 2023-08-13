@@ -1,4 +1,4 @@
-import { generateCommitMessage } from './openai-handler'
+import { generateCommitMessage } from '../../src/openai/openai-handler'
 import { OpenAIApi } from 'openai'
 
 jest.mock('openai', () => {
