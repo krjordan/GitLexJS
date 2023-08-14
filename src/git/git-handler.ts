@@ -39,7 +39,7 @@ export async function findOidInTree(
   return null
 }
 
-async function getChangedFiles(repoPath: string): Promise<string[]> {
+export async function getChangedFiles(repoPath: string): Promise<string[]> {
   const statusMatrix = await git.statusMatrix({ fs, dir: repoPath })
   const changedFiles = statusMatrix
     .filter(([, , workdirStatus]) => workdirStatus)
@@ -47,7 +47,7 @@ async function getChangedFiles(repoPath: string): Promise<string[]> {
   return changedFiles
 }
 
-async function getChangesInFile(
+export async function getChangesInFile(
   repoPath: string,
   filepath: string,
   headCommit: git.ReadCommitResult
@@ -81,35 +81,53 @@ async function getChangesInFile(
 
 export async function getGitChanges(repoPath: string = '.'): Promise<string> {
   try {
-    const headCommitOid = await git.resolveRef({
-      fs,
-      dir: repoPath,
-      ref: 'HEAD'
-    })
-    const headCommit = await git.readCommit({
-      fs,
-      dir: repoPath,
-      oid: headCommitOid
-    })
+    try {
+      // console.log('Resolving ref...')
+      const headCommitOid = await git.resolveRef({
+        fs,
+        dir: repoPath,
+        ref: 'HEAD'
+      })
+      // console.log('Reading commit...')
+      const headCommit = await git.readCommit({
+        fs,
+        dir: repoPath,
+        oid: headCommitOid
+      })
 
-    const changedFiles = await getChangedFiles(repoPath)
-    if (changedFiles.length === 0) {
-      return ''
-    }
+      // console.log('Getting changed files...')
+      const changedFiles = await getChangedFiles(repoPath)
+      if (changedFiles.length === 0) {
+        return ''
+      }
 
-    let diffs = (
-      await Promise.all(
-        changedFiles.map(
-          async (filepath) =>
-            await getChangesInFile(repoPath, filepath, headCommit)
+      // console.log('Getting changes in files...')
+      let diffs = (
+        await Promise.all(
+          changedFiles.map(
+            async (filepath) =>
+              await getChangesInFile(repoPath, filepath, headCommit)
+          )
         )
-      )
-    ).filter((diff) => diff !== '')
+      ).filter((diff) => diff !== '')
 
-    diffs = diffs.map((diff) => truncateDiff(diff))
-    return diffs.join('\n')
+      // console.log('Truncating diffs...')
+      diffs = diffs.map((diff) => truncateDiff(diff))
+      return diffs.join('\n')
+    } catch (error) {
+      console.error('An error occurred while fetching Git changes:', error)
+      if (error instanceof Error) {
+        console.error('Original error:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      throw new Error('Failed to fetch Git changes.')
+    }
   } catch (error) {
     console.error('An error occurred while fetching Git changes:', error)
+    if (error instanceof Error) {
+      console.error('Original error:', error.message)
+      console.error('Error stack:', error.stack)
+    }
     throw new Error('Failed to fetch Git changes.')
   }
 }
