@@ -2,14 +2,15 @@ import { Configuration, OpenAIApi } from 'openai'
 
 export async function generateCommitMessage(
   diff: string,
-  apiKey: string
+  apiKey: string,
+  model: string
 ): Promise<string> {
   const configuration = new Configuration({ apiKey })
   const openai = new OpenAIApi(configuration)
 
   try {
     const completion = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo',
+      model,
       messages: [
         {
           role: 'system',
@@ -43,4 +44,19 @@ export async function generateCommitMessage(
     }
     return '' // Return an empty string as fallback.
   }
+}
+
+export async function getAvailableModels(apiKey: string): Promise<string[]> {
+  const configuration = new Configuration({ apiKey })
+  const openai = new OpenAIApi(configuration)
+
+  let models: string[] = []
+  try {
+    const response = await openai.listModels()
+    models = response.data?.data?.map((model: any) => model.id) ?? []
+  } catch (error) {
+    console.error('Error fetching available models:', error)
+  }
+
+  return models
 }

@@ -1,12 +1,17 @@
-import { generateCommitMessage } from '../../src/openai/openai-handler'
+import {
+  generateCommitMessage,
+  getAvailableModels
+} from '../../src/openai/openai-handler'
 import { OpenAIApi } from 'openai'
 
+const mockModel = 'text-davinci-002'
 jest.mock('openai', () => {
   return {
     Configuration: jest.fn(),
     OpenAIApi: jest.fn().mockImplementation(() => {
       return {
-        createChatCompletion: jest.fn(() => {
+        createChatCompletion: jest.fn((params) => {
+          expect(params.model).toBe(mockModel)
           return {
             data: {
               choices: [
@@ -18,24 +23,35 @@ jest.mock('openai', () => {
               ]
             }
           }
+        }),
+        listModels: jest.fn(() => {
+          return {
+            data: {
+              data: [{ id: 'model1' }, { id: 'model2' }, { id: 'model3' }]
+            }
+          }
         })
       }
     })
   }
 })
 
+let openaiMock: any
+console.error = jest.fn()
+
+beforeEach(() => {
+  openaiMock = new OpenAIApi()
+
+  jest.resetAllMocks()
+})
+
+afterEach(() => {
+  openaiMock.listModels.mockClear()
+})
+
 describe('generateCommitMessage', () => {
   const mockDiff = 'Added a new function to handle user input'
   const mockApiKey = 'TEST_API_KEY'
-
-  let openaiMock: any
-  console.error = jest.fn()
-
-  beforeEach(() => {
-    openaiMock = new OpenAIApi()
-
-    jest.resetAllMocks()
-  })
 
   test('should throw an error when API response does not contain a valid commit message', async () => {
     openaiMock.createChatCompletion.mockResolvedValue({
@@ -50,7 +66,36 @@ describe('generateCommitMessage', () => {
       }
     })
 
-    const result = await generateCommitMessage(mockDiff, mockApiKey)
+    const mockModel = 'text-davinci-002'
+    const result = await generateCommitMessage(mockDiff, mockApiKey, mockModel)
     expect(result).toBe('')
+  })
+})
+
+describe('getAvailableModels', () => {
+  const mockApiKey = 'TEST_API_KEY'
+  let openaiMock: any
+  console.error = jest.fn()
+
+  beforeEach(() => {
+    openaiMock = new OpenAIApi()
+    openaiMock.listModels = jest.fn().mockResolvedValue({
+      data: {
+        data: [{ id: 'model1' }, { id: 'model2' }, { id: 'model3' }]
+      }
+    })
+
+    jest.resetAllMocks()
+  })
+
+  test('should return an array of model IDs when API call is successful', async () => {
+    const result = await getAvailableModels(mockApiKey)
+    expect(result).toEqual(['model1', 'model2', 'model3'])
+  })
+
+  test('should return an empty array when API call fails', async () => {
+    openaiMock.listModels.mockRejectedValue(new Error('API call failed'))
+    const result = await getAvailableModels(mockApiKey)
+    expect(result).toEqual([])
   })
 })
