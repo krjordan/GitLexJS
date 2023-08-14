@@ -15,7 +15,7 @@ export async function generateCommitMessage(
         {
           role: 'system',
           content:
-            'You are an assistant that suggests descriptive git commit messages based on provided code changes or descriptions. Your suggestions should be concise, relevant, and clearly convey the intent of the changes.'
+            'You are an assistant that suggests descriptive git commit messages based on provided code changes or descriptions. Your suggestions should follow the conventional commit format: "<type>(<scope>): <subject>", where <type> is the nature of the change (e.g., feat, fix, docs), <scope> is the part of the codebase the change modifies, and <subject> is a brief description of the change.'
         },
         {
           role: 'user',
