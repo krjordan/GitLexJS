@@ -5,17 +5,30 @@ import inquirer from 'inquirer'
 import {
   getApiKeyFromConfig,
   saveApiKeyToConfig,
-  deleteApiKeyFromConfig
+  deleteApiKeyFromConfig,
+  getModelFromConfig,
+  saveModelToConfig
 } from './config/config-handler'
 import { getGitChanges, truncateDiff } from './git/git-handler'
-import { generateCommitMessage } from './openai/openai-handler'
+import {
+  generateCommitMessage,
+  getAvailableModels
+} from './openai/openai-handler'
 
 async function main(): Promise<void> {
   console.log(chalk.blueBright('🚀 Welcome to Gitlex! 🚀'))
 
   const apiKeyExists = !!getApiKeyFromConfig()
 
-  const { action } = await inquirer.prompt([
+  let models: string[] = []
+  if (apiKeyExists) {
+    const apiKey = getApiKeyFromConfig()
+    if (apiKey) {
+      models = await getAvailableModels(apiKey)
+    }
+  }
+
+  const { action, model } = await inquirer.prompt([
     {
       type: 'list',
       name: 'action',
@@ -26,14 +39,22 @@ async function main(): Promise<void> {
         apiKeyExists && { name: 'Replace Api Key', value: 'replace' },
         apiKeyExists && { name: 'Delete my API Key', value: 'delete' },
         { name: 'Check if API key is set', value: 'check' },
+        { name: 'Select OpenAI model', value: 'model' },
         { name: 'Exit', value: 'exit' }
       ].filter(Boolean)
+    },
+    {
+      type: 'list',
+      name: 'model',
+      message: 'Select an OpenAI model:',
+      choices: models,
+      when: (answers) => answers.action === 'model'
     }
   ])
 
   switch (action) {
     case 'generate':
-      await handleGenerateCommitMessage()
+      await handleGenerateCommitMessage(model)
       break
     case 'set':
       await handleSetApiKey()
@@ -47,6 +68,10 @@ async function main(): Promise<void> {
       break
     case 'check':
       checkApiKey()
+      break
+    case 'model':
+      saveModelToConfig(model)
+      console.log(chalk.green(`Model set to ${model as string} successfully!`))
       break
     case 'exit':
       console.log(chalk.yellowBright('👋 Goodbye!'))
@@ -101,7 +126,7 @@ export async function handleReplaceApiKey(): Promise<void> {
   }
 }
 
-async function handleGenerateCommitMessage(): Promise<void> {
+async function handleGenerateCommitMessage(model: string): Promise<void> {
   const repoPath = '.'
 
   let apiKey = getApiKeyFromConfig()
@@ -111,7 +136,7 @@ async function handleGenerateCommitMessage(): Promise<void> {
         type: 'input',
         name: 'inputKey',
         message: chalk.yellow('Enter your OpenAI API key:'),
-        validate: (value: any) => (value ? true : 'API key cannot be empty.')
+        validate: (value: string) => (value ? true : 'API key cannot be empty.')
       }
     ])
 
@@ -136,7 +161,10 @@ async function proceedWithGitLogic(
     const diff = await getGitChanges(repoPath)
     if (diff) {
       const truncatedDiff = truncateDiff(diff)
-      const commitMessage = await generateCommitMessage(truncatedDiff, apiKey)
+      const model = getModelFromConfig()
+      const commitMessage = model
+        ? await generateCommitMessage(truncatedDiff, apiKey, model)
+        : await generateCommitMessage(truncatedDiff, apiKey, 'text-davinci-002')
       console.log(
         chalk.greenBright(`Suggested Commit Message: ${commitMessage}`)
       )
