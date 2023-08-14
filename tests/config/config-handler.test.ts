@@ -1,4 +1,7 @@
-import { getApiKeyFromConfig, saveApiKeyToConfig } from './config-handler'
+import {
+  getApiKeyFromConfig,
+  saveApiKeyToConfig
+} from '../../src/config/config-handler'
 import * as fs from 'fs'
 
 // Mocking the fs module

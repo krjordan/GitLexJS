@@ -1,6 +1,8 @@
 import * as fs from 'fs'
+import path from 'path'
 
 const CONFIG_FILE = '.gitlex_config.json'
+const CONFIG_PATH = path.join(process.cwd(), CONFIG_FILE)
 
 export function getApiKeyFromConfig(): string | null {
   try {
@@ -54,5 +56,25 @@ export function saveApiKeyToConfig(apiKey: string): void {
       )
     }
     throw error
+  }
+}
+
+export function deleteApiKeyFromConfig(): void {
+  // Check if the config file exists
+  if (!fs.existsSync(CONFIG_FILE)) {
+    console.error('Config file does not exist.')
+    return
+  }
+
+  // Read the file
+  const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'))
+
+  // Check and delete the apiKey property
+  if (config.OPENAI_API_KEY) {
+    delete config.OPENAI_API_KEY
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2))
+    console.log('API key removed from config file.')
+  } else {
+    console.log('No API key found in config file.')
   }
 }

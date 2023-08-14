@@ -1,5 +1,5 @@
 /* eslint-disable no-import-assign */
-import { findOidInTree } from './git-handler'
+import { findOidInTree } from '../../src/git/git-handler'
 import * as git from 'isomorphic-git'
 
 describe('findOidInTree', () => {

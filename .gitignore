@@ -1,4 +1,5 @@
 # .gitignore for GitLexJS
+dist/
 
 # Node.js specific
 node_modules/
@@ -58,3 +59,4 @@ Thumbs.db
 *.backup
 
 # End of .gitignore
+.aider*
