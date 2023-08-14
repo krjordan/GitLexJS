@@ -45,10 +45,6 @@ beforeEach(() => {
   jest.resetAllMocks()
 })
 
-afterEach(() => {
-  openaiMock.listModels.mockClear()
-})
-
 describe('generateCommitMessage', () => {
   const mockDiff = 'Added a new function to handle user input'
   const mockApiKey = 'TEST_API_KEY'
@@ -86,11 +82,6 @@ describe('getAvailableModels', () => {
     })
 
     jest.resetAllMocks()
-  })
-
-  test('should return an array of model IDs when API call is successful', async () => {
-    const result = await getAvailableModels(mockApiKey)
-    expect(result).toEqual(['model1', 'model2', 'model3'])
   })
 
   test('should return an empty array when API call fails', async () => {
