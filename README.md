@@ -27,18 +27,6 @@ Install GitLexJS globally:
 npm install -g gitlexjs
 ```
 
-You can check if GitLexJS was installed correctly by running:
-
-```bash
-gitlex --version
-```
-
-or
-
-```bash
-gitlex --help
-```
-
 ## Usage 🚀
 
 GitLexJS uses an interactive menu for user input.
@@ -57,6 +45,7 @@ You will be presented with a list of options:
 - Delete my API Key
 - Check if API key is set
 - Select OpenAI model
+- Show version
 - Exit
 
 Select the option you want by using the arrow keys and pressing Enter.
