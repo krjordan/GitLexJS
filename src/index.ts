@@ -172,7 +172,6 @@ async function proceedWithGitLogic(
 ): Promise<void> {
   try {
     const diff = await getGitChanges(repoPath)
-    // console.log('diff', diff)
     if (diff) {
       const model = getModelFromConfig()
       const commitMessage = model
