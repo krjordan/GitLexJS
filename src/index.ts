@@ -177,7 +177,7 @@ async function proceedWithGitLogic(
       const model = getModelFromConfig()
       const commitMessage = model
         ? await generateCommitMessage(truncatedDiff, apiKey, model)
-        : await generateCommitMessage(truncatedDiff, apiKey, 'text-davinci-002')
+        : await generateCommitMessage(truncatedDiff, apiKey, 'gpt-3.5-turbo')
       const successMessage = `Success! \n\n👇 Suggested Commit Message 👇 \n\n ${commitMessage} \n`
       spinner.succeed(chalk.greenBright(successMessage))
       clipboardy.writeSync(commitMessage)
