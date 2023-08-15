@@ -7,7 +7,6 @@ export async function generateCommitMessage(
 ): Promise<string> {
   const configuration = new Configuration({ apiKey })
   const openai = new OpenAIApi(configuration)
-  console.log('diff', diff)
 
   try {
     const completion = await openai.createChatCompletion({
@@ -60,8 +59,4 @@ export async function getAvailableModels(apiKey: string): Promise<string[]> {
   }
 
   return models
-}
-
-function showProgress(): void {
-  console.log('progress')
 }
