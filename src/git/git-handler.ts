@@ -74,35 +74,52 @@ export async function getChangesInFile(
       dir: repoPath,
       oid: headBlobOid
     })
+
+    // Convert the Uint8Array to a string
+    const blobContentAsString = new TextDecoder('utf-8').decode(headBlob.blob)
+
     const workdirContent = await nativeFs.readFile(
       `${repoPath}/${filepath}`,
       'utf8'
     )
 
-    const diffs = dmp.diff_main(headBlob.blob.toString(), workdirContent)
+    const diffs = dmp.diff_main(blobContentAsString, workdirContent)
     dmp.diff_cleanupSemantic(diffs)
 
-    return diffs
-      .filter((diff) => diff[0] !== 0)
-      .map((diff) => {
-        const operation = diff[0]
-        const text = diff[1]
-        const lines = text.split('\n')
-        return lines
-          .map((line: any) => {
-            if (operation === 1) {
-              return `+${String(line)}`
-            } else if (operation === -1) {
-              return `-${String(line)}`
-            } else {
-              return ''
-            }
-          })
-          .join('\n')
-      })
-  }
+    const lineChanges: string[] = []
 
+    diffs.forEach((diff, idx) => {
+      const operation = diff[0]
+      const text = diff[1]
+      const lines = text.split('\n')
+      for (const line of lines) {
+        if (line.trim().length === 0) continue
+        if (operation === 1) {
+          lineChanges.push(`+${String(line)}`)
+        } else if (operation === -1) {
+          lineChanges.push(`-${String(line)}`)
+        }
+      }
+      if (operation === 1 || operation - 1) {
+        const context = getContextLines(blobContentAsString, idx)
+        lineChanges.push(`Context: ${context.join('\n')}`)
+      }
+    })
+
+    return lineChanges
+  }
   return []
+}
+
+export function getContextLines(
+  content: string,
+  lineNum: number,
+  context: number = 3
+): string[] {
+  const lines = content.split('\n')
+  const start = Math.max(0, lineNum - context)
+  const end = Math.min(lines.length, lineNum + context)
+  return lines.slice(start, end)
 }
 
 export async function getGitChanges(repoPath: string = '.'): Promise<string> {
@@ -124,11 +141,11 @@ export async function getGitChanges(repoPath: string = '.'): Promise<string> {
         return ''
       }
 
-      console.log('Getting changes in files...')
+      // console.log('Getting changes in files...')
       const diffs = await Promise.all(
         changedFiles.map(async (filepath) => {
           const changes = await getChangesInFile(repoPath, filepath, headCommit)
-          return changes.filter(change => change !== '').join('\n')
+          return changes.filter((change) => change !== '').join('\n')
         })
       )
       if (diffs.join('\n').trim() === '') {
