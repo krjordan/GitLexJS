@@ -89,12 +89,7 @@ describe('findOidInTree', () => {
           path: 'mockDir',
           oid: 'mockDirOid',
           type: 'tree'
-        }
-      ]
-    }
-    const mockSubTree: git.ReadTreeResult = {
-      oid: 'someOtherOid',
-      tree: [
+        },
         {
           mode: '100644',
           path: 'mockFilepath.ts',
@@ -102,6 +97,10 @@ describe('findOidInTree', () => {
           type: 'blob'
         }
       ]
+    }
+    const mockSubTree: git.ReadTreeResult = {
+      oid: 'someOtherOid',
+      tree: []
     }
 
     jest
@@ -137,7 +136,7 @@ describe('getChangedFiles', () => {
 
     const changedFiles = await getChangedFiles('.')
 
-    expect(changedFiles).toEqual(['file1', 'file2'])
+    expect(changedFiles).toEqual(['file1', 'file2', 'file3'])
   })
 })
 
@@ -148,5 +147,17 @@ describe('truncateDiff', () => {
     const truncatedDiff = truncateDiff(diff)
 
     expect(truncatedDiff.length).toBeLessThan(4000)
+  })
+})
+
+describe('getContextLines', () => {
+  test('should return context lines', () => {
+    const content = 'line1\nline2\nline3\nline4\nline5\nline6\nline7'
+    const lineNum = 3
+    const context = 2
+
+    const result = gitHandler.getContextLines(content, lineNum, context)
+
+    expect(result).toEqual(['line2', 'line3', 'line4', 'line5'])
   })
 })

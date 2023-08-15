@@ -1,21 +1,27 @@
 import * as git from 'isomorphic-git'
 import * as fs from 'fs'
 import * as nativeFs from 'fs/promises'
-import { diffLines } from 'diff'
+import { diff_match_patch } from 'diff-match-patch'
+// eslint-disable-next-line new-cap
+const dmp = new diff_match_patch()
+
+const MAX_SIZE = 4000
 
 export async function findOidInTree(
   fs: any,
   dir: string,
   treeOid: string,
-  filepath: string
+  filepath: string,
+  currentDir: string = ''
 ): Promise<string | null> {
   try {
     const tree = await git.readTree({ fs, dir, oid: treeOid })
     for (const entry of tree.tree) {
-      if (entry.path === filepath) {
+      const fullPath = currentDir ? `${currentDir}/${entry.path}` : entry.path
+      if (fullPath === filepath) {
         return entry.oid
       } else if (entry.type === 'tree') {
-        const oid = await findOidInTree(fs, dir, entry.oid, filepath)
+        const oid = await findOidInTree(fs, dir, entry.oid, filepath, fullPath)
         if (oid) return oid
       }
     }
@@ -40,10 +46,13 @@ export async function findOidInTree(
 }
 
 export async function getChangedFiles(repoPath: string): Promise<string[]> {
-  const statusMatrix = await git.statusMatrix({ fs, dir: repoPath })
-  const changedFiles = statusMatrix
-    .filter(([, , workdirStatus]) => workdirStatus)
-    .map(([filepath]) => filepath)
+  const FILE = 0
+  const WORKDIR = 2
+  const STAGE = 3
+  const changedFiles = (await git.statusMatrix({ fs, dir: repoPath }))
+    .filter((row: any[]) => row[WORKDIR] !== row[STAGE] || row[WORKDIR] === 0)
+    .map((row: any[]) => row[FILE])
+
   return changedFiles
 }
 
@@ -51,7 +60,7 @@ export async function getChangesInFile(
   repoPath: string,
   filepath: string,
   headCommit: git.ReadCommitResult
-): Promise<string> {
+): Promise<string[]> {
   const headBlobOid = await findOidInTree(
     fs,
     repoPath,
@@ -65,54 +74,84 @@ export async function getChangesInFile(
       dir: repoPath,
       oid: headBlobOid
     })
+
+    // Convert the Uint8Array to a string
+    const blobContentAsString = new TextDecoder('utf-8').decode(headBlob.blob)
+
     const workdirContent = await nativeFs.readFile(
       `${repoPath}/${filepath}`,
       'utf8'
     )
-    const changes = diffLines(headBlob.blob.toString(), workdirContent)
-    const addedLines = changes.filter((part) => part.added).length
-    const removedLines = changes.filter((part) => part.removed).length
 
-    return `Changes in ${filepath}: ${addedLines} lines added, ${removedLines} lines removed`
+    const diffs = dmp.diff_main(blobContentAsString, workdirContent)
+    dmp.diff_cleanupSemantic(diffs)
+
+    const lineChanges: string[] = []
+
+    diffs.forEach((diff, idx) => {
+      const operation = diff[0]
+      const text = diff[1]
+      const lines = text.split('\n')
+      for (const line of lines) {
+        if (line.trim().length === 0) continue
+        if (operation === 1) {
+          lineChanges.push(`+${String(line)}`)
+        } else if (operation === -1) {
+          lineChanges.push(`-${String(line)}`)
+        }
+      }
+      if (operation === 1 || operation - 1) {
+        const context = getContextLines(blobContentAsString, idx)
+        lineChanges.push(`Context: ${context.join('\n')}`)
+      }
+    })
+
+    return lineChanges
   }
+  return []
+}
 
-  return ''
+export function getContextLines(
+  content: string,
+  lineNum: number,
+  context: number = 3
+): string[] {
+  const lines = content.split('\n')
+  const start = Math.max(0, lineNum - context)
+  const end = Math.min(lines.length, lineNum + context)
+  return lines.slice(start, end)
 }
 
 export async function getGitChanges(repoPath: string = '.'): Promise<string> {
   try {
     try {
-      // console.log('Resolving ref...')
       const headCommitOid = await git.resolveRef({
         fs,
         dir: repoPath,
         ref: 'HEAD'
       })
-      // console.log('Reading commit...')
       const headCommit = await git.readCommit({
         fs,
         dir: repoPath,
         oid: headCommitOid
       })
 
-      // console.log('Getting changed files...')
       const changedFiles = await getChangedFiles(repoPath)
       if (changedFiles.length === 0) {
         return ''
       }
 
       // console.log('Getting changes in files...')
-      let diffs = (
-        await Promise.all(
-          changedFiles.map(
-            async (filepath) =>
-              await getChangesInFile(repoPath, filepath, headCommit)
-          )
-        )
-      ).filter((diff) => diff !== '')
-
-      // console.log('Truncating diffs...')
-      diffs = diffs.map((diff) => truncateDiff(diff))
+      const diffs = await Promise.all(
+        changedFiles.map(async (filepath) => {
+          const changes = await getChangesInFile(repoPath, filepath, headCommit)
+          return changes.filter((change) => change !== '').join('\n')
+        })
+      )
+      if (diffs.join('\n').trim() === '') {
+        console.log('No changes have been made.')
+        return 'No changes have been made.'
+      }
       return diffs.join('\n')
     } catch (error) {
       console.error('An error occurred while fetching Git changes:', error)
@@ -132,7 +171,7 @@ export async function getGitChanges(repoPath: string = '.'): Promise<string> {
   }
 }
 
-export function truncateDiff(diff: string, maxSize: number = 4000): string {
+export function truncateDiff(diff: string, maxSize: number = MAX_SIZE): string {
   try {
     // Check for invalid inputs
     if (typeof diff !== 'string') {

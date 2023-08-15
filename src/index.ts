@@ -11,12 +11,13 @@ import {
   getModelFromConfig,
   saveModelToConfig
 } from './config/config-handler'
-import { getGitChanges, truncateDiff } from './git/git-handler'
+import { getGitChanges } from './git/git-handler'
 import {
   generateCommitMessage,
   getAvailableModels
 } from './openai/openai-handler'
 
+declare const VERSION: string
 const spinner = ora('Generating commit message...')
 
 async function main(): Promise<void> {
@@ -52,6 +53,7 @@ async function main(): Promise<void> {
           value: 'model',
           disabled: !apiKeyExists
         },
+        { name: 'Show version', value: 'version' },
         { name: 'Exit', value: 'exit' }
       ].filter(Boolean)
     },
@@ -85,6 +87,9 @@ async function main(): Promise<void> {
     case 'model':
       saveModelToConfig(model)
       console.log(chalk.green(`Model set to ${model as string} successfully!`))
+      break
+    case 'version':
+      console.log(`GitLexJS version: ${VERSION}`)
       break
     case 'exit':
       console.log(chalk.yellowBright('👋 Goodbye!'))
@@ -173,11 +178,10 @@ async function proceedWithGitLogic(
   try {
     const diff = await getGitChanges(repoPath)
     if (diff) {
-      const truncatedDiff = truncateDiff(diff)
       const model = getModelFromConfig()
       const commitMessage = model
-        ? await generateCommitMessage(truncatedDiff, apiKey, model)
-        : await generateCommitMessage(truncatedDiff, apiKey, 'gpt-3.5-turbo')
+        ? await generateCommitMessage(diff, apiKey, model)
+        : await generateCommitMessage(diff, apiKey, 'gpt-3.5-turbo')
       const successMessage = `Success! \n\n👇 Suggested Commit Message 👇 \n\n ${commitMessage} \n`
       spinner.succeed(chalk.greenBright(successMessage))
       clipboardy.writeSync(commitMessage)
