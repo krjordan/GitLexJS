@@ -11,7 +11,7 @@ import {
   getModelFromConfig,
   saveModelToConfig
 } from './config/config-handler'
-import { getGitChanges, truncateDiff } from './git/git-handler'
+import { getGitChanges } from './git/git-handler'
 import {
   generateCommitMessage,
   getAvailableModels
@@ -172,12 +172,12 @@ async function proceedWithGitLogic(
 ): Promise<void> {
   try {
     const diff = await getGitChanges(repoPath)
+    // console.log('diff', diff)
     if (diff) {
-      const truncatedDiff = truncateDiff(diff)
       const model = getModelFromConfig()
       const commitMessage = model
-        ? await generateCommitMessage(truncatedDiff, apiKey, model)
-        : await generateCommitMessage(truncatedDiff, apiKey, 'gpt-3.5-turbo')
+        ? await generateCommitMessage(diff, apiKey, model)
+        : await generateCommitMessage(diff, apiKey, 'gpt-3.5-turbo')
       const successMessage = `Success! \n\n👇 Suggested Commit Message 👇 \n\n ${commitMessage} \n`
       spinner.succeed(chalk.greenBright(successMessage))
       clipboardy.writeSync(commitMessage)
