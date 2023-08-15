@@ -39,68 +39,95 @@ export async function findOidInTree(
   return null
 }
 
+export async function getChangedFiles(repoPath: string): Promise<string[]> {
+  const statusMatrix = await git.statusMatrix({ fs, dir: repoPath })
+  const changedFiles = statusMatrix
+    .filter(([, , workdirStatus]) => workdirStatus)
+    .map(([filepath]) => filepath)
+  return changedFiles
+}
+
+export async function getChangesInFile(
+  repoPath: string,
+  filepath: string,
+  headCommit: git.ReadCommitResult
+): Promise<string> {
+  const headBlobOid = await findOidInTree(
+    fs,
+    repoPath,
+    headCommit.commit.tree,
+    filepath
+  )
+
+  if (headBlobOid) {
+    const headBlob = await git.readBlob({
+      fs,
+      dir: repoPath,
+      oid: headBlobOid
+    })
+    const workdirContent = await nativeFs.readFile(
+      `${repoPath}/${filepath}`,
+      'utf8'
+    )
+    const changes = diffLines(headBlob.blob.toString(), workdirContent)
+    const addedLines = changes.filter((part) => part.added).length
+    const removedLines = changes.filter((part) => part.removed).length
+
+    return `Changes in ${filepath}: ${addedLines} lines added, ${removedLines} lines removed`
+  }
+
+  return ''
+}
+
 export async function getGitChanges(repoPath: string = '.'): Promise<string> {
   try {
-    const statusMatrix = await git.statusMatrix({ fs, dir: repoPath })
-    const diffs: string[] = []
+    try {
+      // console.log('Resolving ref...')
+      const headCommitOid = await git.resolveRef({
+        fs,
+        dir: repoPath,
+        ref: 'HEAD'
+      })
+      // console.log('Reading commit...')
+      const headCommit = await git.readCommit({
+        fs,
+        dir: repoPath,
+        oid: headCommitOid
+      })
 
-    const headCommitOid = await git.resolveRef({
-      fs,
-      dir: repoPath,
-      ref: 'HEAD'
-    })
-    const headCommit = await git.readCommit({
-      fs,
-      dir: repoPath,
-      oid: headCommitOid
-    })
-
-    for (const [filepath, , workdirStatus] of statusMatrix) {
-      if (workdirStatus) {
-        const headBlobOid = await findOidInTree(
-          fs,
-          repoPath,
-          headCommit.commit.tree,
-          filepath
-        )
-
-        if (headBlobOid) {
-          const headBlob = await git.readBlob({
-            fs,
-            dir: repoPath,
-            oid: headBlobOid
-          })
-          const workdirContent = await nativeFs.readFile(
-            `${repoPath}/${filepath}`,
-            'utf8'
-          )
-          const changes = diffLines(headBlob.blob.toString(), workdirContent)
-          let formattedDiff = `Changes in ${filepath}:\n---\n`
-
-          changes.forEach((part) => {
-            const symbol = part.added ? '+ ' : part.removed ? '- ' : '  '
-            let value = ''
-
-            if (part.removed) {
-              const numberArray = part.value.split(',').map(Number)
-              const chars = []
-              for (const num of numberArray) {
-                chars.push(String.fromCharCode(num))
-              }
-              value = chars.join('')
-            } else {
-              value = part.value
-            }
-            formattedDiff += `${symbol}${value}\n`
-          })
-          formattedDiff += '+++\n'
-          diffs.push(formattedDiff)
-        }
+      // console.log('Getting changed files...')
+      const changedFiles = await getChangedFiles(repoPath)
+      if (changedFiles.length === 0) {
+        return ''
       }
+
+      // console.log('Getting changes in files...')
+      let diffs = (
+        await Promise.all(
+          changedFiles.map(
+            async (filepath) =>
+              await getChangesInFile(repoPath, filepath, headCommit)
+          )
+        )
+      ).filter((diff) => diff !== '')
+
+      // console.log('Truncating diffs...')
+      diffs = diffs.map((diff) => truncateDiff(diff))
+      return diffs.join('\n')
+    } catch (error) {
+      console.error('An error occurred while fetching Git changes:', error)
+      if (error instanceof Error) {
+        console.error('Original error:', error.message)
+        console.error('Error stack:', error.stack)
+      }
+      throw new Error('Failed to fetch Git changes.')
     }
-    return diffs.join('\n')
   } catch (error) {
     console.error('An error occurred while fetching Git changes:', error)
+    if (error instanceof Error) {
+      console.error('Original error:', error.message)
+      console.error('Error stack:', error.stack)
+    }
     throw new Error('Failed to fetch Git changes.')
   }
 }

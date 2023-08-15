@@ -1,14 +1,26 @@
 /* eslint-disable no-import-assign */
-import { findOidInTree } from '../../src/git/git-handler'
+import * as gitHandler from '../../src/git/git-handler'
 import * as git from 'isomorphic-git'
+import * as nativeFs from 'fs/promises'
+import {
+  getGitChanges,
+  findOidInTree,
+  getChangedFiles,
+  getChangesInFile,
+  truncateDiff
+} from '../../src/git/git-handler'
 
 describe('findOidInTree', () => {
   const mockFs = {}
   const mockDir = '/mockDir'
   const mockFilepath = 'mockFilepath.ts'
 
+  beforeEach(() => {
+    jest.restoreAllMocks()
+  })
+
   afterEach(() => {
-    jest.clearAllMocks()
+    jest.restoreAllMocks()
   })
 
   test('should successfully find the OID in the tree', async () => {
@@ -104,5 +116,37 @@ describe('findOidInTree', () => {
       mockFilepath
     )
     expect(result).toBe('mockOid')
+  })
+})
+describe('getChangedFiles', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  test('should return changed files', async () => {
+    // Mock git.statusMatrix to return a predefined status matrix
+    jest.spyOn(git, 'statusMatrix').mockResolvedValue([
+      ['file1', 1, 2, 0],
+      ['file2', 1, 2, 0],
+      ['file3', 1, 0, 0]
+    ])
+
+    const changedFiles = await getChangedFiles('.')
+
+    expect(changedFiles).toEqual(['file1', 'file2'])
+  })
+})
+
+describe('truncateDiff', () => {
+  test('should truncate diff', () => {
+    const diff = 'a'.repeat(5000)
+
+    const truncatedDiff = truncateDiff(diff)
+
+    expect(truncatedDiff.length).toBeLessThan(4000)
   })
 })

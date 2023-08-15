@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import chalk from 'chalk'
+import clipboardy from 'clipboardy'
 import inquirer from 'inquirer'
+import ora from 'ora'
 
 import {
   getApiKeyFromConfig,
@@ -14,6 +16,8 @@ import {
   generateCommitMessage,
   getAvailableModels
 } from './openai/openai-handler'
+
+const spinner = ora('Generating commit message...')
 
 async function main(): Promise<void> {
   console.log(chalk.blueBright('🚀 Welcome to Gitlex! 🚀'))
@@ -34,12 +38,20 @@ async function main(): Promise<void> {
       name: 'action',
       message: 'What would you like to do?',
       choices: [
-        { name: 'Generate a commit message', value: 'generate' },
+        {
+          name: 'Generate a commit message',
+          value: 'generate',
+          disabled: !apiKeyExists
+        },
         !apiKeyExists && { name: 'Set API Key', value: 'set' },
         apiKeyExists && { name: 'Replace Api Key', value: 'replace' },
         apiKeyExists && { name: 'Delete my API Key', value: 'delete' },
         { name: 'Check if API key is set', value: 'check' },
-        { name: 'Select OpenAI model', value: 'model' },
+        {
+          name: 'Select OpenAI model',
+          value: 'model',
+          disabled: !apiKeyExists
+        },
         { name: 'Exit', value: 'exit' }
       ].filter(Boolean)
     },
@@ -54,6 +66,7 @@ async function main(): Promise<void> {
 
   switch (action) {
     case 'generate':
+      spinner.start()
       await handleGenerateCommitMessage(model)
       break
     case 'set':
@@ -149,7 +162,7 @@ async function handleGenerateCommitMessage(model: string): Promise<void> {
   if (apiKey) {
     await proceedWithGitLogic(repoPath, apiKey)
   } else {
-    console.log(chalk.red('API Key was not provided. Exiting...'))
+    spinner.fail('API Key was not provided. Exiting...')
   }
 }
 
@@ -164,13 +177,16 @@ async function proceedWithGitLogic(
       const model = getModelFromConfig()
       const commitMessage = model
         ? await generateCommitMessage(truncatedDiff, apiKey, model)
-        : await generateCommitMessage(truncatedDiff, apiKey, 'text-davinci-002')
-      console.log(
-        chalk.greenBright(`Suggested Commit Message: ${commitMessage}`)
-      )
+        : await generateCommitMessage(truncatedDiff, apiKey, 'gpt-3.5-turbo')
+      const successMessage = `Success! \n\n👇 Suggested Commit Message 👇 \n\n ${commitMessage} \n`
+      spinner.succeed(chalk.greenBright(successMessage))
+      clipboardy.writeSync(commitMessage)
+      console.log(chalk.green('Commit message copied to clipboard!'))
+    } else {
+      spinner.fail('Unknown error occurred. Exiting...')
     }
   } catch (error) {
-    console.error(chalk.red('Error:'), error)
+    spinner.fail(chalk.red(`Error: ${error as string}`))
   }
 }
 
