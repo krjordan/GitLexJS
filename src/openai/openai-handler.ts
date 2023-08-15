@@ -6,7 +6,6 @@ export async function generateCommitMessage(
   model: string
 ): Promise<string> {
   const configuration = new Configuration({ apiKey })
-  console.log('configuration:', configuration)
   const openai = new OpenAIApi(configuration)
 
   try {
@@ -27,7 +26,6 @@ export async function generateCommitMessage(
       max_tokens: 50
     })
 
-    console.log('completion:', completion)
     // Check if there's a valid message in the response.
     if (completion.data.choices?.[0]?.message?.content) {
       return completion.data.choices[0].message.content
