@@ -1,15 +1,15 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "module": "CommonJS",
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
     "outDir": "./dist",
-    "strict": true
+    "strict": true,
+    "esModuleInterop": true,
+    "noEmit": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["jest", "node"]
   },
-  "main": "./dist/index.js",
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }

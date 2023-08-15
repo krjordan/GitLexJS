@@ -1,4 +1,3 @@
-
 # 🤝 Contributing to GitLexJS
 
 Firstly, a huge shoutout to you for even considering contributing to GitLexJS! 🎉 It's enthusiastic individuals like you that make GitLexJS an outstanding tool.

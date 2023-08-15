@@ -1,4 +1,5 @@
 # .gitignore for GitLexJS
+dist/
 
 # Node.js specific
 node_modules/
@@ -48,7 +49,7 @@ bower_components
 Thumbs.db
 
 # Configuration files
-.gitlex-config.json
+.gitlex_config.json
 
 # Other
 *.tmp
@@ -58,3 +59,4 @@ Thumbs.db
 *.backup
 
 # End of .gitignore
+.aider*

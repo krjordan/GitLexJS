@@ -1,7 +1,6 @@
-
 # GitLexJS 🚀✨
 
-Generate intelligent commit messages for your Git changes using AI. GitLexJS leverages OpenAI's GPT models to craft meaningful commit messages based on your code diffs.
+GitLexJS is a command-line tool that uses the power of AI to generate meaningful commit messages for your Git changes. Leveraging OpenAI's GPT models, GitLexJS analyzes your code diffs and crafts commit messages that accurately reflect the changes you've made. Say goodbye to the struggle of coming up with commit messages and let GitLexJS do the work for you! 🎉
 
 ## Table of Contents
 
@@ -30,20 +29,26 @@ npm install -g gitlexjs
 
 ## Usage 🚀
 
-To generate an AI-based commit message for your git diff:
+GitLexJS uses an interactive menu for user input.
+
+To start the tool, simply run:
 
 ```bash
-gitlexjs --path /path/to/your/repo
+gitlex
 ```
 
-#### Arguments:
+You will be presented with a list of options:
 
-`--path` (optional): Path to git repository. Default is the current directory.
-To check if your OpenAI API key is already stored:
+- Generate a commit message
+- Set API Key
+- Replace API Key
+- Delete my API Key
+- Check if API key is set
+- Select OpenAI model
+- Show version
+- Exit
 
-```bash
-gitlexjs --check-api-key
-```
+Select the option you want by using the arrow keys and pressing Enter.
 
 **Note:** The tool will prompt you for the OpenAI API key if it's not found in the configuration file. Your API key will be stored locally in the `.gitlex-config.json` file.
 
@@ -52,7 +57,7 @@ gitlexjs --check-api-key
 For `GitLexJS` to work, you'll need an OpenAI API key:
 
 1. [Sign up](https://beta.openai.com/signup/) for an API key with OpenAI.
-2. The first time you run `GitLexJS`, it will prompt you to enter the key. It's then stored locally and securely in `.gitlex-config.json`.
+2. Run `GitLexJS` and select the appropriate option from the interactive menu to set, replace, or delete your API key. The key is then stored locally and securely in `.gitlex_config.json`.
 
 > ⚠️ **Note:** Never share your API key or commit it directly to your codebase.
 
@@ -60,7 +65,7 @@ For `GitLexJS` to work, you'll need an OpenAI API key:
 
 Join us in refining your commit messages. Look into our future plans in the `ROADMAP.md` file. Feedback, contributions, and suggestions are always welcome!
 
-## Development Workflow 🛠
+### Development Workflow 🛠
 
 For contributors, we follow the gitflow workflow:
 
@@ -68,7 +73,7 @@ For contributors, we follow the gitflow workflow:
 - **Release**: For final testing before a release.
 - **Main**: Stable releases are merged here.
 
-### Local Development Setup:
+#### Local Development Setup:
 
 1. Clone the repository:
 
@@ -83,10 +88,36 @@ cd GitLexJS
 npm install
 ```
 
-3. Run locally:
+#### Running the Application:
+
+To run the application locally, use the following command:
 
 ```bash
-node dist/index.js
+npm start
+```
+
+#### Building the Application:
+
+To build the application, use the following command:
+
+```bash
+npm run build
+```
+
+#### Linting:
+
+To run the linter, use the following command:
+
+```bash
+npm run lint
+```
+
+#### Testing:
+
+To run tests, use the following command:
+
+```bash
+npm run test
 ```
 
 ## Contributing 🤝
