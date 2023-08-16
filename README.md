@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/gitlexjs.svg)](https://www.npmjs.com/package/gitlexjs)
+
 # GitLexJS 🚀✨
 
 GitLexJS is a command-line tool that uses the power of AI to generate meaningful commit messages for your Git changes. Leveraging OpenAI's GPT models, GitLexJS analyzes your code diffs and crafts commit messages that accurately reflect the changes you've made. Say goodbye to the struggle of coming up with commit messages and let GitLexJS do the work for you! 🎉
