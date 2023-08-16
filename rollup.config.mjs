@@ -9,7 +9,8 @@ export default {
   input: 'src/index.ts',
   output: {
     dir: 'dist',
-    format: 'cjs'
+    format: 'cjs',
+    banner: '#!/usr/bin/env node'
   },
   external: [
     'tslib',

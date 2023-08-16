@@ -36,6 +36,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Grant execute permissions
+        if: github.ref == 'refs/heads/main'
+        run: chmod +x dist/index.js
+
       - name: Deploy to npm
         if: github.ref == 'refs/heads/main' # Ensure deployment only on main branch
         run: npm publish
